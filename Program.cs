@@ -3,6 +3,7 @@ using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 class LibFileExtractor
 {
@@ -34,11 +35,75 @@ class LibFileExtractor
 
     static void Main(string[] args)
     {
+        Console.WriteLine("SOMA Lib File Extractor");
+        Console.WriteLine("------------------------");
+        Console.WriteLine("1. Process a single .lib file");
+        Console.WriteLine("2. Process all .lib files in a folder");
+        Console.Write("\nSelect an option (1-2): ");
+        
+        string option = Console.ReadLine()?.Trim();
+        
+        switch (option)
+        {
+            case "1":
+                ProcessSingleFile(args);
+                break;
+            case "2":
+                ProcessFolder();
+                break;
+            default:
+                Console.WriteLine("Invalid option selected.");
+                break;
+        }
+        
+        Console.WriteLine("\nPress any key to exit...");
+        Console.ReadKey();
+    }
+    
+    static void ProcessFolder()
+    {
+        Console.Write("Enter the folder path containing .lib files: ");
+        string folderPath = Console.ReadLine()?.Trim();
+        
+        if (string.IsNullOrEmpty(folderPath))
+        {
+            Console.WriteLine("No folder path provided. Exiting...");
+            return;
+        }
+        
+        if (!Directory.Exists(folderPath))
+        {
+            Console.WriteLine($"Folder not found: {folderPath}");
+            return;
+        }
+        
+        string[] libFiles = Directory.GetFiles(folderPath, "*.lib");
+        
+        if (libFiles.Length == 0)
+        {
+            Console.WriteLine("No .lib files found in the specified folder.");
+            return;
+        }
+        
+        Console.WriteLine($"Found {libFiles.Length} .lib files. Processing...\n");
+        
+        int processedCount = 0;
+        foreach (string libFile in libFiles)
+        {
+            Console.WriteLine($"Processing file {++processedCount} of {libFiles.Length}: {Path.GetFileName(libFile)}");
+            ExtractBitmapsFromFile(libFile);
+            Console.WriteLine();
+        }
+        
+        Console.WriteLine($"Finished processing {processedCount} .lib files.");
+    }
+    
+    static void ProcessSingleFile(string[] args)
+    {
         string filePath;
         
         if (args.Length != 1)
         {
-            Console.WriteLine("No file specified as command-line argument.");
             Console.Write("Please enter the path to the .lib file: ");
             filePath = Console.ReadLine()?.Trim();
             
@@ -63,7 +128,12 @@ class LibFileExtractor
                 return;
             }
         }
-
+        
+        ExtractBitmapsFromFile(filePath);
+    }
+    
+    static void ExtractBitmapsFromFile(string filePath)
+    {
         string outputDir = Path.Combine(
             Path.GetDirectoryName(filePath),
             Path.GetFileNameWithoutExtension(filePath) + "_extracted"
@@ -193,8 +263,5 @@ class LibFileExtractor
         {
             Console.WriteLine($"Error: {ex.Message}");
         }
-        
-        Console.WriteLine("Press any key to exit...");
-        Console.ReadKey();
     }
 }
